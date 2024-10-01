@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube URL Extractor</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; }
+        button { padding: 10px 20px; }
+        #result { margin-top: 20px; }
+        #status-bar { 
+            width: 100%; 
+            height: 20px; 
+            background-color: #f0f0f0; 
+            margin-top: 10px;
+            display: none;
+        }
+        #status-bar-fill {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.5s;
+        }
+        .download-link {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube URL Extractor</h1>
+    <input type="text" id="url" placeholder="Enter YouTube URL">
+    <button onclick="extractUrls()">Download Data</button>
+    <div id="status-bar"><div id="status-bar-fill"></div></div>
+    <div id="result"></div>
+
+    <script>
+        function extractUrls() {
+            var url = $('#url').val();
+            $('#result').html('');
+            $('#status-bar').show();
+            $('#status-bar-fill').css('width', '0%');
+            
+            var progress = 0;
+            var progressInterval = setInterval(function() {
+                progress += 10;
+                if (progress > 90) progress = 90;
+                $('#status-bar-fill').css('width', progress + '%');
+            }, 300);
+
+            $.ajax({
+                url: '/',
+                method: 'POST',
+                data: { url: url },
+                success: function(response) {
+                    clearInterval(progressInterval);
+                    $('#status-bar-fill').css('width', '100%');
+                    setTimeout(function() {
+                        $('#status-bar').hide();
+                    }, 500);
+
+                    if (response.error) {
+                        $('#result').html('<p>Error: ' + response.error + '</p>');
+                    } else {
+                        var html = '<h2>Results:</h2>';
+                        html += '<a href="' + response.audio_url + '" class="download-link" download>Download audio (m4a, ' + response.audio_size + ')</a><br>';
+                        html += '<a href="' + response.video_url + '" class="download-link" download>Download video (' + response.video_ext + ', ' + response.video_size + (response.video_resolution ? ', ' + response.video_resolution : '') + ')</a>';
+                        $('#result').html(html);
+                    }
+                },
+                error: function() {
+                    clearInterval(progressInterval);
+                    $('#status-bar').hide();
+                    $('#result').html('<p>An error occurred while processing the request</p>');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
