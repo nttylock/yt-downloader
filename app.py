@@ -4,10 +4,12 @@ import site
 site.main()
 
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 from yt_extractor import get_video_info, get_audio_and_video_urls
 from urllib.parse import urlparse, parse_qs, urlencode
 
 app = Flask(__name__)
+CORS(app)  # This will allow requests from any source
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
